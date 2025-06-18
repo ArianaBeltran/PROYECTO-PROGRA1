@@ -6,6 +6,7 @@ using namespace std;
 //esta es una sesion de prueba 
 //apocositilin 
 //
+
 struct gastosMensuales{
     char periodo[9]="";
     double gastosGenerales=0.0;
@@ -19,6 +20,7 @@ struct copropietario{
     char apellidocop[30]="";
     char telf[9];
     double totalSuperficie=0.0;
+    char carnet[9];
 };
 
 struct generacionExpensas{
@@ -26,6 +28,11 @@ struct generacionExpensas{
     char nombrecop[30]="";
     double montoExpensa=0.0;
 };
+
+bool existeArchivo(const std::string& nombreArchivo) {
+    std::ifstream archivo(nombreArchivo, std::ios::binary);
+    return archivo.good();
+}
 
 void gastosMantenimiento(string archivogastosmensuales){
     ofstream archivoGM;
@@ -57,18 +64,16 @@ bool soloLetras(char * texto){
     return true;
 }
 
-bool soloNumeros(char * texto, int longitud){
-    int largoTexto =strlen(texto); // para sacar la longitud de un char
-    bool esValido = true;
-    for (int i = 0; i < largoTexto; i++)
-    {
-        if (!isdigit(texto[i])){
-            esValido= false;
-            break;
+bool soloNumeros(char* texto, int longitud) {
+    for (int i = 0; i < longitud; i++) {
+        if (texto[i] == '\0' || !isdigit(texto[i])) {
+            return false;
         }
     }
-    return esValido;
+    // Verifica que no haya más caracteres luego de los 8
+    return texto[longitud] == '\0';
 }
+
 
 bool letraYnumero (char* texto){
     bool hayLetra = false;
@@ -89,57 +94,74 @@ void registroCopropietario(string archivoCop){
     copropietario sumarcop;
     registroCop.open(archivoCop, ios::binary | ios::app);
     if (registroCop.fail()){
-        cout << "nel pastel ";
+        cout << "No se pudo abrir el archivo para registro." << endl;
         return;
-    } 
-    do //nombre
+    }
+
+    do // nombre
     {
-        cout << "ingrese el nombre del copropietario"<<endl;
-        cin.getline(sumarcop.nombrecop,30);
-        if(!soloLetras(sumarcop.nombrecop)){
-            cout<<"NOMBRE INVALIDO. (solo se permite letras)"<<endl;
+        cout << "Ingrese el nombre del copropietario" << endl;
+        cin.getline(sumarcop.nombrecop, 30);
+        if (!soloLetras(sumarcop.nombrecop)) {
+            cout << "NOMBRE INVALIDO. (solo se permite letras)" << endl;
         }
     } while (!soloLetras(sumarcop.nombrecop));
 
-    do //apellido
+    do // apellido
     {
-        cout << "ingrese el apellido del copropietario"<<endl;
-        cin.getline(sumarcop.apellidocop,30);
-        if(!soloLetras(sumarcop.apellidocop)){
-            cout<<"APELLIDO INVALIDO. (solo se permite letras)"<<endl;
+        cout << "Ingrese el apellido del copropietario" << endl;
+        cin.getline(sumarcop.apellidocop, 30);
+        if (!soloLetras(sumarcop.apellidocop)) {
+            cout << "APELLIDO INVALIDO. (solo se permite letras)" << endl;
         }
     } while (!soloLetras(sumarcop.apellidocop));
 
-    do //telefono
+    do // teléfono
     {
-        cout << "ingrese el telefono del copropietario"<<endl;
-        cin.getline(sumarcop.telf,9);
-        if(!soloNumeros(sumarcop.telf,9)){
-            cout<<"TELEFONO INVALIDO. (8 digitos)"<<endl;;
+        cout << "Ingrese el telefono del copropietario" << endl;
+        cin.getline(sumarcop.telf, 9); // 8 + 1 para '\0'
+        
+        if (!soloNumeros(sumarcop.telf, 8)) {
+            cout << "TELEFONO INVALIDO. (8 dígitos)" << endl;
         }
-    } while (!soloNumeros(sumarcop.telf, 9));
-    
-    do //departamento
+    } while (!soloNumeros(sumarcop.telf, 8));
+
+    do // departamento
     {
-        cout << "ingrese el depto en el que vive el copropietario"<<endl;
-        cin.getline(sumarcop.Nrodepto,9);
-        if(!letraYnumero(sumarcop.Nrodepto)){
-            cout<<"NUMERO DE DEPARTAMENTO INVALIDO. (debe contener al menos una letra y un numero)"<<endl;
+        cout << "Ingrese el depto en el que vive el copropietario" << endl;
+        cin.getline(sumarcop.Nrodepto, 9);
+        if (!letraYnumero(sumarcop.Nrodepto)) {
+            cout << "NUMERO DE DEPARTAMENTO INVALIDO. (debe contener al menos una letra y un numero)" << endl;
         }
     } while (!letraYnumero(sumarcop.Nrodepto));
-    
     do
     {
-        cout << "ingrese la superficie del departamento a registrar"<<endl;
-        cin>>sumarcop.totalSuperficie; 
-        cin.ignore();
-        if(sumarcop.totalSuperficie < 0){
-            cout<<"SUPERFICIE INVALIDA. (debe ser un numero positivo)"<<endl;
+        cout<<"Ingrese el carnet del copropietario"<<endl;
+        cin.getline(sumarcop.carnet ,9);
+
+        if (!soloNumeros(sumarcop.carnet , 8)){
+            cout<<"CARNET INVALIDO. (8 digitos)"<<endl;
         }
-    } while (sumarcop.totalSuperficie < 0);
+        
+    } while (!soloNumeros(sumarcop.carnet,8));
+    
+    // Validar superficie, controlando entrada inválida
+    while (true) {
+        cout << "Ingrese la superficie del departamento a registrar" << endl;
+        if (cin >> sumarcop.totalSuperficie && sumarcop.totalSuperficie >= 0) {
+            cin.ignore(); // limpio salto de línea para próximas lecturas
+            break;
+        } else {
+            cout << "SUPERFICIE INVALIDA. (debe ser un numero positivo)" << endl;
+            cin.clear(); // limpio estado de error
+            cin.ignore(1000, '\n'); // limpio buffer
+        }
+    }
+
     registroCop.write((char*)&sumarcop, sizeof(copropietario));
     registroCop.close();
 }
+
 
 void eliminarCop(string archivoCop, char banderaDepto[9]) {
     fstream delCop;
@@ -270,9 +292,121 @@ void ReporteGeneralPeriodo(string nombreArchivoPeriodo){
         
     
 }
+/*------------------------------------------------------------------------------------------*/
+void generarComprobanteCopropietario(string archivoCop) {
+    double precioPorM2 = 20.0; //le ponen precioo
+    ifstream archivo(archivoCop, ios::binary);
+    copropietario cop;
 
+    if (archivo.fail()) {
+        cout << "No se pudo abrir el archivo de copropietarios." << endl;
+        return;
+    }
 
+    while (archivo.read((char*)&cop, sizeof(copropietario))) {
+        string nombreArchivo =string("Comprobante_") + cop.Nrodepto + ".txt";
+        ofstream comprobante(nombreArchivo);
 
+        if (comprobante.fail()) {
+            cout << "No se pudo crear el archivo de comprobante para el depto " << cop.Nrodepto << endl;
+            continue;
+        }
+        double montoTotal = cop.totalSuperficie * precioPorM2;
+
+        comprobante << "===============================" << endl;
+        comprobante << "      COMPROBANTE DE PAGO      " << endl;
+        comprobante << "===============================" << endl;
+        comprobante << "Nombre: " << cop.nombrecop << " " << cop.apellidocop << endl;
+        comprobante << "Telefono: " << cop.telf << endl;
+        comprobante << "Departamento: " << cop.Nrodepto << endl;
+        comprobante << "Superficie: " << cop.totalSuperficie << " m2" << endl;
+        comprobante << "Precio por m2: " << precioPorM2 << " Bs" << endl;
+        comprobante << "-------------------------------" << endl;
+        comprobante << "TOTAL A PAGAR: " << montoTotal << " Bs" << endl;
+        comprobante << "===============================" << endl;
+        comprobante << "Gracias por su pago puntual." << endl;
+
+        comprobante.close();
+    }
+
+    archivo.close();
+    cout << "Comprobantes generados correctamente." << endl;
+}
+
+void mostrarComprobantePersonal(string archivoCop) {
+    ifstream archivo(archivoCop, ios::binary);
+    copropietario cop;
+    char nombre[30], apellido[30], carnet[10];
+    bool encontrado = false;
+
+    if (archivo.fail()) {
+        cout << "No se pudo abrir el archivo de copropietarios." << endl;
+        return;
+    }
+
+    cout << "Ingrese el nombre: ";
+    cin.getline(nombre, 30);
+    cout << "Ingrese el apellido: ";
+    cin.getline(apellido, 30);
+
+    while (archivo.read((char*)&cop, sizeof(copropietario))) {
+
+        if (strcmp(nombre, cop.nombrecop) == 0 && strcmp(apellido, cop.apellidocop) == 0) {//check nombre y apell
+
+            cout << "Ingrese el carnet: ";
+            cin.getline(carnet, 10);
+
+            if (strcmp(carnet, cop.carnet) == 0) {
+                double precioPorM2 = 20.0;
+                double montoTotal = cop.totalSuperficie * precioPorM2;
+
+                cout << "\n===============================" << endl;
+                cout << "      COMPROBANTE DE PAGO      " << endl;
+                cout << "===============================" << endl;
+                cout << "Nombre: " << cop.nombrecop << " " << cop.apellidocop << endl;
+                cout << "Telefono: " << cop.telf << endl;
+                cout << "Departamento: " << cop.Nrodepto << endl;
+                cout << "Superficie: " << cop.totalSuperficie << " m2" << endl;
+                cout << "Precio por m2: " << precioPorM2 << " Bs" << endl;
+                cout << "-------------------------------" << endl;
+                cout << "TOTAL A PAGAR: " << montoTotal << " Bs" << endl;
+                cout << "===============================" << endl;
+                cout << "Gracias por su pago puntual." << endl;
+
+                encontrado = true;
+                break;
+            } else {
+                cout << "Carnet incorrecto." << endl;
+                encontrado = true;
+                break;
+            }
+        }
+    }
+
+    if (!encontrado) {
+        cout << "Copropietario no encontrado." << endl;
+    }
+
+    archivo.close();
+}
+
+void listarCopropietarios(const string& archivoCop) {
+    ifstream archivo(archivoCop, ios::binary);
+    if (!archivo) {
+        cout << "No se pudo abrir el archivo de copropietarios." << endl;
+        return;
+    }
+    copropietario cop;
+    cout << "Lista de copropietarios:\n";
+    while (archivo.read((char*)&cop, sizeof(copropietario))) {
+        cout << "Nombre: " << cop.nombrecop << " " << cop.apellidocop
+             << ", Carnet: " << cop.carnet
+             << ", Telefono: " << cop.telf
+             << ", Depto: " << cop.Nrodepto
+             << ", Superficie: " << cop.totalSuperficie << " m2\n";
+    }
+    archivo.close();
+}
 
 void menuOpciones (string archivoCop, string archivoGastosmensuales){
     int opcion;
@@ -285,6 +419,8 @@ void menuOpciones (string archivoCop, string archivoGastosmensuales){
         cout << "\t2. Registrar (o modificar) copropietario." << endl;
         cout << "\t3. Mostrar copropietarios." << endl;
         cout << "\t4. Mostrar gastos realizados. " << endl;
+        cout << "\t5. Generar comprobantes de copropietarios" << endl;
+        cout << "\t6. Listar copropietarios" << endl;
         cout << "\t0. SALIR" << endl;
 
         cout << "\n\tIngrese la opcion: ";
@@ -339,7 +475,15 @@ void menuOpciones (string archivoCop, string archivoGastosmensuales){
                 mostrarArchivoGM(archivoGastosmensuales);
                 system("pause");
                 break;
-
+            case 5:
+                system("cls");
+                generarComprobanteCopropietario(archivoCop);
+                system("pause");
+                break;
+            case 6:
+                system("cls");
+                listarCopropietarios(archivoCop);
+                system("pause");
             default:
                 cout << "No existe la opcion ingresada." << endl;
                 break;
@@ -347,10 +491,86 @@ void menuOpciones (string archivoCop, string archivoGastosmensuales){
     } while (opcion != 0);
 }
 
+void MenuOpcionesCopropietario(string archivoCop, string archivoGastosmensuales){
+    int opcion=0;
+    cout<<"MENU DE OPCIONES PARA EL COPROPIETARIO"<<endl;
+    cout<<"\t1. Mostrar Comprobante Personal"<<endl;
+    cout<<"\t0. Volver al menu principal"<<endl;
+    cout<<"Ingrese una opcion: ";
+    cin >> opcion;
+    cin.ignore(); 
+
+    switch (opcion)
+    {
+    case 1:
+        system("cls");
+        mostrarComprobantePersonal(archivoCop);
+        system("pause");
+        break;
+    case 0:
+        return;
+    default:
+        cout << "Opción no válida." << endl;
+        break;
+    }
+}
+
+void crearArchivoPrueba(const std::string& nombreArchivo) { // aqui hice la prueba por eso creo que no llena
+    copropietario cop;                                      //el archivo binario llora*
+    strcpy(cop.nombrecop, "Juan");
+    strcpy(cop.apellidocop, "Perez");
+    strcpy(cop.carnet, "12345678");
+    strcpy(cop.telf, "76543210");
+    strcpy(cop.Nrodepto, "101");
+    cop.totalSuperficie = 50.5;
+
+    std::ofstream archivo(nombreArchivo, std::ios::binary);
+    if (!archivo) {
+        std::cout << "No se pudo crear el archivo." << std::endl;
+        return;
+    }
+    archivo.write((char*)&cop, sizeof(copropietario));
+    archivo.close();
+    std::cout << "Archivo de prueba creado con éxito." << std::endl;
+}
+
 int main(){
-    string arGastosMantenimiento="GastosDeMantenimiento.BIN";
-    string arRegistroCop="RegistroDeCopropietario.BIN";
-    menuOpciones(arGastosMantenimiento,arRegistroCop);
-    
+    int opcion=0;
+    string arRegistroCop = "RegistroDeCopropietario.BIN";
+    string arGastosMantenimiento = "GastosDeMantenimiento.BIN";
+    if (!existeArchivo(arRegistroCop)) {
+        cout << "Archivo de copropietarios no existe, creando archivo de prueba..." << endl;
+        crearArchivoPrueba(arRegistroCop);
+    }
+    do {
+        system("cls");
+        cout<<"\tBIENVENIDO AL REGISTRO DE EXPENSAS DEL EDIFICIO MONTERREY" << endl;
+        cout<<"===========================================================" << endl;
+        cout<<"1. Administrador del edificio" << endl;
+        cout<< "2. Copropietario" << endl;
+        cout<<"0. Salir" << endl;
+        cout<<"Ingrese una opcion: ";
+        cin>>opcion;
+        cin.ignore();
+
+        switch (opcion)
+        {
+        case 1:
+            menuOpciones(arGastosMantenimiento, arRegistroCop);
+            break;
+        case 2:
+            MenuOpcionesCopropietario(arRegistroCop, arGastosMantenimiento);
+            break;
+        case 0:
+            cout << "Gracias por usar el sistema." << endl;
+            break;
+        default:
+            cout << "Opcion no valida." << endl;
+            system("pause");
+            break;
+        }
+    } while (opcion != 0);
+
     return 0;
 }
+

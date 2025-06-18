@@ -1,0 +1,12 @@
+===============================
+      COMPROBANTE DE PAGO      
+===============================
+Nombre: Ilsen Beltran
+Telefono: 62595115
+Departamento: A15
+Superficie: 126 m2
+Precio por m2: 20 Bs
+-------------------------------
+TOTAL A PAGAR: 2520 Bs
+===============================
+Gracias por su pago puntual.

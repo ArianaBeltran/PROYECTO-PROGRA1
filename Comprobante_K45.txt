@@ -1,0 +1,12 @@
+===============================
+      COMPROBANTE DE PAGO      
+===============================
+Nombre: Ariana Beltran
+Telefono: 62595115
+Departamento: K45
+Superficie: 10 m2
+Precio por m2: 20 Bs
+-------------------------------
+TOTAL A PAGAR: 200 Bs
+===============================
+Gracias por su pago puntual.

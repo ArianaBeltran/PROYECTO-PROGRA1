@@ -1,0 +1,12 @@
+===============================
+      COMPROBANTE DE PAGO      
+===============================
+Nombre: Dominic Escalante
+Telefono: 78956523
+Departamento: A12
+Superficie: 78 m2
+Precio por m2: 20 Bs
+-------------------------------
+TOTAL A PAGAR: 1560 Bs
+===============================
+Gracias por su pago puntual.
